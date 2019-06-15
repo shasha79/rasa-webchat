@@ -41,6 +41,8 @@ class Widget extends Component {
 
     socket.on('bot_uttered', (botUttered) => {
       this.messages.push(botUttered);
+      // Callback for bot messages
+      this.props.handleNewBotMessage(botUttered);
     });
 
     this.props.dispatch(pullSession());
@@ -238,6 +240,7 @@ Widget.propTypes = {
   profileAvatar: PropTypes.string,
   showCloseButton: PropTypes.bool,
   hideWhenNotConnected: PropTypes.bool,
+  handleNewBotMessage: PropTypes.func,
   fullScreenMode: PropTypes.bool,
   isChatVisible: PropTypes.bool,
   isChatOpen: PropTypes.bool,

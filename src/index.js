@@ -25,6 +25,7 @@ const ConnectedWidget = (props) => {
       subtitle={props.subtitle}
       customData={props.customData}
       handleNewUserMessage={props.handleNewUserMessage}
+      handleNewBotMessage={props.handleNewBotMessage}
       profileAvatar={props.profileAvatar}
       showCloseButton={props.showCloseButton}
       hideWhenNotConnected={props.hideWhenNotConnected}
@@ -48,6 +49,7 @@ ConnectedWidget.propTypes = {
   socketPath: PropTypes.string,
   customData: PropTypes.shape({}),
   handleNewUserMessage: PropTypes.func,
+  handleNewBotMessage: PropTypes.func,
   profileAvatar: PropTypes.string,
   inputTextFieldHint: PropTypes.string,
   connectingText: PropTypes.string,
