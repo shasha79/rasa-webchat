@@ -14,14 +14,11 @@ export function createNewMessage(text, sender) {
   });
 }
 
-export function createLinkSnippet(link, sender) {
+export function createLinkSnippet(elements, sender) {
   return Map({
     type: MESSAGES_TYPES.SNIPPET.LINK,
     component: Snippet,
-    title: link.title,
-    link: link.link,
-    content: link.content,
-    target: link.target || '_blank',
+    elements: elements,
     sender,
     showAvatar: true
   });

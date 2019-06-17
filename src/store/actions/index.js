@@ -94,10 +94,10 @@ export function addResponseMessage(text) {
   };
 }
 
-export function addLinkSnippet(link) {
+export function addLinkSnippet(elements) {
   return {
     type: actions.ADD_NEW_LINK_SNIPPET,
-    link
+    elements
   };
 }
 

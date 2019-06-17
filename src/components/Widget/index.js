@@ -170,10 +170,7 @@ class Widget extends Component {
     } else if (isSnippet(message)) {
       const element = message.attachment.payload.elements[0];
       this.props.dispatch(addLinkSnippet({
-        title: element.title,
-        content: element.buttons[0].title,
-        link: element.buttons[0].url,
-        target: '_blank'
+        elements: message.attachment.payload.elements
       }));
     } else if (isVideo(message)) {
       const element = message.attachment.payload;

@@ -56,7 +56,11 @@ export const PROP_TYPES = {
     sender: PropTypes.oneOf([
       MESSAGE_SENDER.CLIENT,
       MESSAGE_SENDER.RESPONSE
-    ])
+    ]),
+
+    elements: function(props, propName, componentName) {
+        //TODO: validate elements
+    }
   }),
 
   VIDREPLY: ImmutablePropTypes.contains({

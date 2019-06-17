@@ -29,7 +29,7 @@ export default function (storage) {
         return storeMessage(state.push(createNewMessage(action.text, MESSAGE_SENDER.RESPONSE)));
       }
       case actionTypes.ADD_NEW_LINK_SNIPPET: {
-        return storeMessage(state.push(createLinkSnippet(action.link, MESSAGE_SENDER.RESPONSE)));
+        return storeMessage(state.push(createLinkSnippet(action.elements, MESSAGE_SENDER.RESPONSE)));
       }
       case actionTypes.ADD_NEW_VIDEO_VIDREPLY: {
         return storeMessage(state.push(createVideoSnippet(action.video, MESSAGE_SENDER.RESPONSE)));
