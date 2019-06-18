@@ -14,6 +14,7 @@ const plugin = {
         subtitle={args.subtitle}
         customData={args.customData}
         handleNewBotMessage={args.handleNewBotMessage}
+        handleNewUserMessage={args.handleNewUserMessage}
         inputTextFieldHint={args.inputTextFieldHint}
         connectingText={args.connectingText}
         profileAvatar={args.profileAvatar}

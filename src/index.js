@@ -15,6 +15,7 @@ const ConnectedWidget = (props) => {
     sock,
     storage,
     props.docViewer,
+    props.handleNewUserMessage
   );
   return (<Provider store={store}>
     <Widget

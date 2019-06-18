@@ -151,6 +151,8 @@ class Widget extends Component {
       if (!session_id) return
       console.log("sending init payload", session_id)
       socket.emit('user_uttered', { message: initPayload, customData, session_id: session_id });
+      this.props.handleNewUserMessage(initPayload);
+
       this.props.dispatch(initialize());
     }
   }
@@ -168,7 +170,6 @@ class Widget extends Component {
     } else if (isQR(message)) {
       this.props.dispatch(addQuickReply(message));
     } else if (isSnippet(message)) {
-      const element = message.attachment.payload.elements[0];
       this.props.dispatch(addLinkSnippet({
         elements: message.attachment.payload.elements
       }));
@@ -237,6 +238,7 @@ Widget.propTypes = {
   profileAvatar: PropTypes.string,
   showCloseButton: PropTypes.bool,
   hideWhenNotConnected: PropTypes.bool,
+  handleNewUserMessage: PropTypes.func,
   handleNewBotMessage: PropTypes.func,
   fullScreenMode: PropTypes.bool,
   isChatVisible: PropTypes.bool,

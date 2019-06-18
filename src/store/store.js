@@ -9,12 +9,13 @@ import * as actionTypes from './actions/actionTypes';
 
 let store = "call initStore first";
 
-function initStore(hintText, connectingText, socket, storage, docViewer = false) {
+function initStore(hintText, connectingText, socket, storage, docViewer = false, handleNewUserMessage = () => {}) {
   const customMiddleWare = (store) => next => (action) => {
     const session_id = (getLocalSession(storage, SESSION_NAME)? getLocalSession(storage, SESSION_NAME).session_id: null);
     switch (action.type) {
       case actionTypes.EMIT_NEW_USER_MESSAGE: {
         socket.emit("user_uttered", { message: action.text, customData: socket.customData, session_id });
+        handleNewUserMessage(action.text);
       }
       case actionTypes.GET_OPEN_STATE: {
         return store.getState().behavior.get("isChatOpen");
