@@ -31,7 +31,10 @@ class Widget extends Component {
     this.messages = [];
     setInterval(() => {
       if (this.messages.length > 0) {
-        this.dispatchMessage(this.messages.shift());
+        const message = this.messages.shift()
+        this.dispatchMessage(message);
+        // Callback for handling message
+        this.props.handleNewBotMessage(message);
       }
     }, this.props.interval);
   }
@@ -41,8 +44,6 @@ class Widget extends Component {
 
     socket.on('bot_uttered', (botUttered) => {
       this.messages.push(botUttered);
-      // Callback for bot messages
-      this.props.handleNewBotMessage(botUttered);
     });
 
     this.props.dispatch(pullSession());

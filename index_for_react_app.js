@@ -1,5 +1,6 @@
 import ConnectedWidget from './src';
 import {
+  emitUserMessage,
   addUserMessage,
   addResponseMessage,
   addLinkSnippet,
@@ -20,6 +21,7 @@ import {
 
 export {
   ConnectedWidget as Widget,
+  emitUserMessage,
   addUserMessage,
   addResponseMessage,
   addLinkSnippet,
