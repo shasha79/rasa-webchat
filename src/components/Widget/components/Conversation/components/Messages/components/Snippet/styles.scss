@@ -4,6 +4,8 @@
 .conversation-container {
   .snippet {
     @include message-bubble($grey-2, #000);
+    max-height: 300px;
+    overflow: auto;
   }
   
   .snippet-title {
