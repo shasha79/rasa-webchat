@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import Header from './components/Header';
 import Messages from './components/Messages';
 import Sender from './components/Sender';
+import PersistentMenu from './components/PersistentMenu';
 import './style.scss';
 
 const Conversation = props =>
@@ -21,6 +22,7 @@ const Conversation = props =>
       profileAvatar={props.profileAvatar}
       params={props.params}
     />
+    <PersistentMenu />
     <Sender
       sendMessage={props.sendMessage}
       disabledInput={props.disabledInput}

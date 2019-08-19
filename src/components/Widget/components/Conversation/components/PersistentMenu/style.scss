@@ -1,0 +1,38 @@
+@import "variables.scss";
+
+.conversation-container {
+  .persistent-menu-container {
+    align-items: center;
+    display: flex;
+    background-color: $grey-2;
+    height: 45px;
+    padding: 5px;
+    float: left;
+//    overflow: hidden;
+    position: relative;
+//    display: inline-block;
+  }
+  .persistent-menu {
+    display: block;
+    position: absolute;
+    background-color: $grey-2;
+    z-index: 1;
+    bottom: 30px;
+  }
+  
+
+  @media screen and (max-width: 800px)  {
+    .persistent-menu-container {
+      border-radius: 0;
+      flex-shrink: 0;
+    }
+  }
+  
+}
+
+.widget-embedded {
+  .persistent-menu-container {
+    flex: 0, 0, auto;
+    height: 60px;
+  }
+}
