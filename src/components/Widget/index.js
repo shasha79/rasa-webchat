@@ -200,6 +200,7 @@ class Widget extends Component {
   };
 
   render() {
+    {console.log("WIDGET PM: " + JSON.stringify(this.props.persistentMenu));}
     return (
       <WidgetLayout
         toggleChat={this.toggleConversation}
@@ -218,6 +219,7 @@ class Widget extends Component {
         params={this.props.params}
         openLauncherImage={this.props.openLauncherImage}
         closeImage={this.props.closeImage}
+        persistentMenu={this.props.persistentMenu}
       />
     );
   }
@@ -251,7 +253,9 @@ Widget.propTypes = {
   connected: PropTypes.bool,
   initialized: PropTypes.bool,
   openLauncherImage: PropTypes.string,
-  closeImage: PropTypes.string
+  closeImage: PropTypes.string,
+  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
+
 };
 
 Widget.defaultProps = {

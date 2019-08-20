@@ -9,6 +9,7 @@ import './style.scss';
 
 const Conversation = props =>
   <div className="conversation-container">
+    {console.log("Conversation PM: " + JSON.stringify(props.persistentMenu))}
     <Header
       title={props.title}
       subtitle={props.subtitle}
@@ -22,7 +23,7 @@ const Conversation = props =>
       profileAvatar={props.profileAvatar}
       params={props.params}
     />
-    <PersistentMenu />
+    <PersistentMenu items={props.persistentMenu} />
     <Sender
       sendMessage={props.sendMessage}
       disabledInput={props.disabledInput}
@@ -40,7 +41,8 @@ Conversation.propTypes = {
   params: PropTypes.object,
   connected: PropTypes.bool,
   connectingText: PropTypes.string,
-  closeImage: PropTypes.string
+  closeImage: PropTypes.string,
+  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
 
 };
 

@@ -37,6 +37,7 @@ const ConnectedWidget = (props) => {
       storage={storage}
       openLauncherImage={props.openLauncherImage}
       closeImage={props.closeImage}
+      persistentMenu={props.persistentMenu}
     />
   </Provider>);
 };
@@ -62,7 +63,9 @@ ConnectedWidget.propTypes = {
   params: PropTypes.object,
   openLauncherImage: PropTypes.string,
   closeImage: PropTypes.string,
-  docViewer: PropTypes.bool
+  docViewer: PropTypes.bool,
+  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
+
 };
 
 ConnectedWidget.defaultProps = {
@@ -79,7 +82,8 @@ ConnectedWidget.defaultProps = {
   params: {
     storage: 'local'
   },
-  docViewer: false
+  docViewer: false,
+  persistentMenu: []
 };
 
 export default ConnectedWidget;

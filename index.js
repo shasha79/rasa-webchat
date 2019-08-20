@@ -27,6 +27,7 @@ const plugin = {
         openLauncherImage={args.openLauncherImage}
         closeImage={args.closeImage}
         docViewer={args.docViewer}
+        persistentMenu={args.persistentMenu}
       />, document.querySelector(args.selector)
     );
   }

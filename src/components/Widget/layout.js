@@ -18,6 +18,7 @@ const WidgetLayout = (props) => {
   if (chatShowing && !props.embedded) {
     classes.push('chat-open');
   }
+  {console.log("WidgetLayout PM: " + JSON.stringify(props.persistentMenu));}
 
   return (
     isVisible ?
@@ -37,6 +38,8 @@ const WidgetLayout = (props) => {
           connected={props.connected}
           connectingText={props.connectingText}
           closeImage={props.closeImage}
+          persistentMenu={props.persistentMenu}
+
         />
       }
       {
@@ -81,7 +84,9 @@ WidgetLayout.propTypes = {
   connected: PropTypes.bool,
   connectingText: PropTypes.string,
   openLauncherImage: PropTypes.string,
-  closeImage: PropTypes.string
+  closeImage: PropTypes.string,
+  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
+
 };
 
 export default connect(mapStateToProps)(WidgetLayout);
