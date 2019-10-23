@@ -49,7 +49,4 @@ PersistentMenu.propTypes = {
   items: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
 };
 
-/*export default connect(store => ({
-    items: store.items
-  }))(PersistentMenu); */
 export default PersistentMenu;  

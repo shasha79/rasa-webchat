@@ -8,9 +8,7 @@
     height: 45px;
     padding: 5px;
     float: left;
-//    overflow: hidden;
     position: relative;
-//    display: inline-block;
   }
   .persistent-menu {
     display: block;
@@ -18,6 +16,9 @@
     background-color: $grey-2;
     z-index: 1;
     bottom: 30px;
+    list-style: none;
+    padding-inline-start: 10px;
+    padding-inline-end: 20px;
   }
   
 

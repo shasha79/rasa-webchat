@@ -30,6 +30,7 @@
     "react-immutable-proptypes": "^2.1.0",
     "react-markdown": "^4.0.3",
     "react-redux": "^5.0.6",
+    "react-simple-dropdown": "^3.2.3",
     "redux": "^3.7.2",
     "socket.io": "^2.1.1",
     "uniqueid": "^1.0.0"
@@ -63,6 +64,7 @@
     "pure-react-carousel": "^1.21.1",
     "react": "^15.6.2",
     "react-test-renderer": "^15.6.2",
+    "react-context-menu": "^1.1.0",
     "sass-loader": "^6.0.7",
     "socket.io-client": "^2.1.1",
     "style-loader": "^0.18.2",
