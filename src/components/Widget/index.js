@@ -32,6 +32,7 @@ class Widget extends Component {
   constructor(props) {
     super(props);
     this.messages = [];
+    this.onGoingMessageDelay = false;
     setInterval(() => {
       if (this.messages.length > 0) {
         const message = this.messages.shift();
@@ -183,11 +184,13 @@ class Widget extends Component {
       const session_id = this.getSessionId();
 
       // check that session_id is confirmed
-      if (!session_id) return;
-      console.log('sending init payload', session_id);
-      socket.emit('user_uttered', { message: initPayload, customData, session_id });
+      if (!sessionId) return;
+
+      // eslint-disable-next-line no-console
+      console.log('sending init payload', sessionId);
+      socket.emit('user_uttered', { message: initPayload, customData, session_id: sessionId });
       this.props.handleNewUserMessage(initPayload);
-      this.props.dispatch(initialize());
+      dispatch(initialize());
     }
   }
 
@@ -209,6 +212,7 @@ class Widget extends Component {
     } else if (isQR(message)) {
       this.props.dispatch(addQuickReply(message));
     } else if (isSnippet(message)) {
+
       this.props.dispatch(addLinkSnippet({
         elements: message.attachment.payload.elements
       }));
@@ -244,7 +248,6 @@ class Widget extends Component {
   };
 
   render() {
-    {console.log("WIDGET PM: " + JSON.stringify(this.props.persistentMenu));}
     return (
       <WidgetLayout
         toggleChat={this.toggleConversation}

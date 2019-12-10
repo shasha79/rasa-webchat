@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
   This implementation mimics the SocketIO implementation.
 */
 export default function (socketUrl, customData, _path, options) {
-  const socket = SockJS(socketUrl);
+  const socket = SockJS(socketUrl + (_path || ''));
   const stomp = Stomp.over(socket);
 
   const MESSAGES_CHANNEL = options.messagesChannel || '/app/sendMessage';
@@ -43,6 +43,7 @@ export default function (socketUrl, customData, _path, options) {
   });
 
   socketProxy.onconnect = () => {
+    socketProxy.connected = true;
     socketProxy.id = extractSessionId(socket);
     socketProxy.customData = customData;
     stomp.subscribe(REPLY_TOPIC, socketProxy.onIncomingMessage);
@@ -65,7 +66,7 @@ export default function (socketUrl, customData, _path, options) {
       socketProxy.emit('connect');
     } else if (message.type === 'LEAVE') {
       socket.close();
-      socketProxy.emit('disconnect', 'server left');
+      socketProxy.emit('disconnect', message.reason || 'server left');
     } else if (message.type === 'SESSION_CONFIRM') {
       socketProxy.emit('session_confirm', socketProxy.id);
     } else if (message.type === 'CHAT') {
@@ -83,7 +84,9 @@ export default function (socketUrl, customData, _path, options) {
 
   stomp.connect({}, socketProxy.onconnect, socketProxy.onerror);
 
-  socket.onclose = () => {
+  stomp.onWebSocketClose = () => {
+    // eslint-disable-next-line no-console
+    socketProxy.connected = false;
     // eslint-disable-next-line no-console
     console.log('Closed sockjs connection');
     socketProxy.emit('disconnect');

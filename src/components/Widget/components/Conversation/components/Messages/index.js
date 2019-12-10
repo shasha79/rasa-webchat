@@ -8,6 +8,19 @@ import { Video, Image, Message, Snippet, QuickReply } from 'messagesComponents';
 
 import './styles.scss';
 
+const isToday = (date) => {
+  const today = new Date();
+  return date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear();
+};
+
+const formatDate = (date) => {
+  const dateToFormat = new Date(date);
+  const showDate = isToday(dateToFormat) ? '' : `${dateToFormat.toLocaleDateString()} `;
+  return `${showDate}${dateToFormat.toLocaleTimeString('en-US', { timeStyle: 'short' })}`;
+};
+
 const scrollToBottom = () => {
   const messagesDiv = document.getElementById('messages');
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -25,55 +38,77 @@ class Messages extends Component {
   getComponentToRender = (message, index, isLast) => {
     const { params } = this.props;
     const ComponentToRender = (() => {
-      switch(message.get('type')){
+      switch (message.get('type')) {
         case MESSAGES_TYPES.TEXT: {
-          return Message
+          return Message;
         }
         case MESSAGES_TYPES.SNIPPET.LINK: {
-          return Snippet
+          return Snippet;
         }
         case MESSAGES_TYPES.VIDREPLY.VIDEO: {
-          return Video
+          return Video;
         }
         case MESSAGES_TYPES.IMGREPLY.IMAGE: {
-          return Image
+          return Image;
         }
         case MESSAGES_TYPES.QUICK_REPLY: {
-          return QuickReply
+          return QuickReply;
         }
         case MESSAGES_TYPES.CUSTOM_COMPONENT:
           return connect(
             store => ({ store }),
             dispatch => ({ dispatch })
           )(this.props.customComponent);
+        default:
+          return null;
       }
-      return null
-    })()
+    })();
     if (message.get('type') === 'component') {
-      return <ComponentToRender id={index} {...message.get('props')} isLast={isLast}/>;
+      return <ComponentToRender id={index} {...message.get('props')} isLast={isLast} />;
     }
     return <ComponentToRender id={index} params={params} message={message} isLast={isLast} />;
   }
 
   render() {
+    const { displayTypingIndication, profileAvatar } = this.props;
+
     const renderMessages = () => {
+      const {
+        messages,
+        showMessageDate
+      } = this.props;
+
+      if (messages.isEmpty()) return null;
+
       const groups = [];
       let group = null;
 
-      if (this.props.messages.isEmpty()) return null;
+      const dateRenderer = typeof showMessageDate === 'function' ? showMessageDate :
+        showMessageDate === true ? formatDate : null;
+
+      const renderMessageDate = (message) => {
+        const timestamp = message.get('timestamp');
+
+        if (!dateRenderer || !timestamp) return null;
+        const dateToRender = dateRenderer(message.get('timestamp', message));
+        return dateToRender
+          ? <span className="message-date">{dateRenderer(message.get('timestamp'), message)}</span>
+          : null;
+      };
 
       const renderMessage = (message, index) => (
-        <div className="message" key={index}>
+        <div className={`message ${profileAvatar && 'with-avatar'}`} key={index}>
           {
-            this.props.profileAvatar &&
+            profileAvatar &&
             message.get('showAvatar') &&
-            <img src={this.props.profileAvatar} className="avatar" alt="profile" />
+            <img src={profileAvatar} className="avatar" alt="profile" />
           }
-          { this.getComponentToRender(message, index, index === this.props.messages.size - 1) }
+          { this.getComponentToRender(message, index, index === messages.size - 1) }
+          { renderMessageDate(message) }
         </div>
       );
 
-      this.props.messages.forEach((msg, index) => {
+      messages.forEach((msg, index) => {
         if (group === null || group.from !== msg.get('sender')) {
           if (group !== null) groups.push(group);
 
@@ -98,6 +133,21 @@ class Messages extends Component {
     return (
       <div id="messages" className="messages-container">
         { renderMessages() }
+        {displayTypingIndication && (
+          <div className={`message typing-indication ${profileAvatar && 'with-avatar'}`}>
+            {
+              profileAvatar &&
+              <img src={profileAvatar} className="avatar" alt="profile" />
+            }
+            <div className="response">
+              <div id="wave">
+                <span className="dot" />
+                <span className="dot" />
+                <span className="dot" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -106,9 +156,12 @@ class Messages extends Component {
 Messages.propTypes = {
   messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map),
   profileAvatar: PropTypes.string,
-  customComponent: PropTypes.func
+  customComponent: PropTypes.func,
+  showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  displayTypingIndication: PropTypes.bool.isRequired
 };
 
 export default connect(store => ({
-  messages: store.messages
+  messages: store.messages,
+  displayTypingIndication: store.behavior.get('messageDelayed')
 }))(Messages);

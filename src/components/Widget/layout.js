@@ -11,20 +11,19 @@ const WidgetLayout = (props) => {
   if (props.fullScreenMode) {
     classes.push('full-screen');
   }
-  const showCloseButton = props.showCloseButton !== undefined ? props.showCloseButton : !props.embedded;
+  const showCloseButton =
+    props.showCloseButton !== undefined ? props.showCloseButton : !props.embedded;
   const isVisible = props.isChatVisible && !(props.hideWhenNotConnected && !props.connected);
-  const chatShowing = (props.isChatOpen || props.embedded);
+  const chatShowing = props.isChatOpen || props.embedded;
 
   if (chatShowing && !props.embedded) {
     classes.push('chat-open');
   }
   {console.log("WidgetLayout PM: " + JSON.stringify(props.persistentMenu));}
 
-  return (
-    isVisible ?
+  return isVisible ? (
     <div className={classes.join(' ')}>
-      {
-        chatShowing &&
+      {chatShowing && (
         <Conversation
           title={props.title}
           subtitle={props.subtitle}
@@ -43,10 +42,10 @@ const WidgetLayout = (props) => {
           closeImage={props.closeImage}
           persistentMenu={props.persistentMenu}
           customComponent={props.customComponent}
+          showMessageDate={props.showMessageDate}
         />
-      }
-      {
-        !props.embedded &&
+      )}
+      {!props.embedded && (
         <Launcher
           toggle={props.toggleChat}
           isChatOpen={props.isChatOpen}
@@ -55,11 +54,11 @@ const WidgetLayout = (props) => {
           openLauncherImage={props.openLauncherImage}
           closeImage={props.closeImage}
           displayUnreadCount={props.displayUnreadCount}
+          tooltipPayload={props.tooltipPayload}
         />
-      }
+      )}
     </div>
-    : null
-  );
+  ) : null;
 };
 
 const mapStateToProps = state => ({
@@ -93,7 +92,9 @@ WidgetLayout.propTypes = {
   closeImage: PropTypes.string,
   persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
   customComponent: PropTypes.func,
-  displayUnreadCount: PropTypes.bool
+  displayUnreadCount: PropTypes.bool,
+  showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  tooltipPayload: PropTypes.string
 };
 
 export default connect(mapStateToProps)(WidgetLayout);

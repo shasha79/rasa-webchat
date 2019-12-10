@@ -8,6 +8,7 @@
     display: flex;
     font-size: 14px;
     font-family: $roboto;
+    flex-wrap: wrap;
   
     .markdown {
       p {
@@ -20,27 +21,28 @@
     @include message-bubble($blue-1, $white);
     margin-left: auto;
     overflow-wrap: break-word;
-  
+    
     a {
       color: $turqois-1;
     }
   }
   
   .response {
-    @include message-bubble($grey-2, #000);
+    @include message-bubble($grey-2, #000, 0 15px 15px 15px);
     overflow-wrap: break-word;
   }
   
   /* For markdown elements created with default styles */
   .message-text {
     margin: 0;
-  }
-  
-  .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 100%;
-    margin-right: 10px;
+    .markdown{
+      p{
+        margin-bottom: 1em;
+        &:last-child{
+          margin-bottom: 0;
+        }
+      }
+    }
   }
 
 }

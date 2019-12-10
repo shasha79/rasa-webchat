@@ -21,11 +21,13 @@ const Conversation = props =>
       connected={props.connected}
       connectingText={props.connectingText}
       closeImage={props.closeImage}
+      profileAvatar={props.profileAvatar}
     />
     <Messages
       profileAvatar={props.profileAvatar}
       params={props.params}
       customComponent={props.customComponent}
+      showMessageDate={props.showMessageDate}
     />
     <PersistentMenu items={props.persistentMenu} />
     <Sender

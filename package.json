@@ -1,6 +1,6 @@
 {
   "name": "rasa-webchat",
-  "version": "0.6.4",
+  "version": "0.7.2",
   "description": "Chat web widget for React apps and Rasa Core chatbots",
   "main": "lib/index.js",
   "repository": "git@https://github.com/mrbot-ai/rasa-webchat.git",
@@ -35,6 +35,7 @@
     "react-simple-dropdown": "^3.2.3",
     "redux": "^3.7.2",
     "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0",
     "sockjs-client": "^1.4.0",
     "uniqueid": "^1.0.0",
     "websocket": "^1.0.29"
@@ -55,7 +56,7 @@
     "clean-webpack-plugin": "^0.1.19",
     "css-loader": "^0.28.11",
     "enzyme": "^2.9.1",
-    "eslint": "^3.19.0",
+    "eslint": "^4.18.2",
     "eslint-config-airbnb": "^14.1.0",
     "eslint-config-prettier": "^1.6.0",
     "eslint-import-resolver-babel-module": "^3.0.0",
@@ -74,7 +75,6 @@
     "react-context-menu": "^1.1.0",
     "redux-mock-store": "^1.5.3",
     "sass-loader": "^6.0.7",
-    "socket.io-client": "^2.2.0",
     "standard-version": "^7.0.0",
     "style-loader": "^0.18.2",
     "url-loader": "^0.5.9",
