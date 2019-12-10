@@ -35,9 +35,11 @@ In your `<body/>`:
     connectingText: "Waiting for server...",
     hideWhenNotConnected: true,
     fullScreenMode: false,
+    showFullScreenButton: false,
     profileAvatar: "http://to.avat.ar",
     openLauncherImage: 'myCustomOpenImage.png',
     closeLauncherImage: 'myCustomCloseImage.png',
+    displayUnreadCount: true, // --> [view](./assets/unread_count_pastille.png)
     params: {
       images: {
         dims: {
@@ -46,7 +48,7 @@ In your `<body/>`:
         }
       },
       storage: "local"
-    }
+    },
   })
 </script>
 ```
@@ -75,14 +77,17 @@ function CustomWidget = () => {
       initPayload={"/get_started"}
       socketUrl={"http://localhost:5500"}
       socketPath={"/socket.io/"}
-      customData: {{"userId": "123"}}, // arbitrary custom data. Stay minimal as this will be added to the socket
+      customData={{"userId": "123"}} // arbitrary custom data. Stay minimal as this will be added to the socket
       title={"Title"}
       inputTextFieldHint={"Type a message..."}
       connectingText={"Waiting for server..."}
       hideWhenNotConnected
+      connectOn={"mount"}
       embedded={true}
+      showFullScreenButton={false}
       openLauncherImage="myCustomOpenImage.png"
       closeLauncherImage="myCustomCloseImage.png"
+      displayUnreadCount={true} // --> [view](./assets/unread_count_pastille.png)
       params={{
         images: {
           dims: {
@@ -92,6 +97,7 @@ function CustomWidget = () => {
         },
         storage: "local"
       }}
+      customComponent={ (messageData) => (<div>Custom React component</div>) }
     />
   )
 }
@@ -196,6 +202,17 @@ message = {
 emit('bot_uttered', message, room=socket_id)
 ```
 
+###### sending a message with custom data
+
+```python
+message = {
+      "data":{
+        "customField1": 'anything you want',
+        "customField2": 'other custom data, 
+      }
+    }
+emit('bot_uttered', message, room=socket_id)
+```
 
 ## Usage
 
@@ -217,6 +234,22 @@ When reconnecting to an existing chat session, the bot will send a message conta
 **Note :** this is an **experimental** feature  
 
 If you add this prop to the component or to the init script, `docViewer=true` , this will treat links in received messages as links to a document ( `.pdf .doc .xlsx` etc. ) and will open them in a popup using `https://docs.google.com/viewer` service
+
+### connectOn
+
+This prop lets you choose when the widget will try connecting to the server. By default, it tries connecting as soon as it mounts. If you select `connectOn='open'` it will only attempt connection when the widget is opened. it can only take the values `mount` and `open`.
+
+### onSocketEvent
+
+This prop lets you call custom code on a specific socket event. Here is what it should look like.
+
+```jsx
+onSocketEvent={{
+  'bot_uttered': () => console.log('the bot said something'),
+  'connect': () => console.log('connection established'),
+  'disconnect': () => doSomeCleanup(),
+}}
+```
 
 ## API
 

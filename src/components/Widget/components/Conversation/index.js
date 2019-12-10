@@ -14,7 +14,10 @@ const Conversation = props =>
       title={props.title}
       subtitle={props.subtitle}
       toggleChat={props.toggleChat}
+      toggleFullScreen={props.toggleFullScreen}
+      fullScreenMode={props.fullScreenMode}
       showCloseButton={props.showCloseButton}
+      showFullScreenButton={props.showFullScreenButton}
       connected={props.connected}
       connectingText={props.connectingText}
       closeImage={props.closeImage}
@@ -22,6 +25,7 @@ const Conversation = props =>
     <Messages
       profileAvatar={props.profileAvatar}
       params={props.params}
+      customComponent={props.customComponent}
     />
     <PersistentMenu items={props.persistentMenu} />
     <Sender
@@ -31,19 +35,22 @@ const Conversation = props =>
   </div>;
 
 Conversation.propTypes = {
-  title: PropTypes.string,
-  subtitle: PropTypes.string,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
+  subtitle: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   sendMessage: PropTypes.func,
   profileAvatar: PropTypes.string,
+  toggleFullScreen: PropTypes.func,
+  fullScreenMode: PropTypes.bool,
   toggleChat: PropTypes.func,
   showCloseButton: PropTypes.bool,
+  showFullScreenButton: PropTypes.bool,
   disabledInput: PropTypes.bool,
   params: PropTypes.object,
   connected: PropTypes.bool,
   connectingText: PropTypes.string,
   closeImage: PropTypes.string,
-  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
-
+  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
+  customComponent: PropTypes.func
 };
 
 export default Conversation;

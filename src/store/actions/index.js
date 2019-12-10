@@ -60,6 +60,12 @@ export function closeChat() {
   };
 }
 
+export function toggleFullScreen() {
+  return {
+    type: actions.TOGGLE_FULLSCREEN
+  };
+}
+
 export function toggleInputDisabled() {
   return {
     type: actions.TOGGLE_INPUT_DISABLED
@@ -156,6 +162,12 @@ export function dropMessages() {
 export function pullSession() {
   return {
     type: actions.PULL_SESSION
+  };
+}
+
+export function newUnreadMessage() {
+  return {
+    type: actions.NEW_UNREAD_MESSAGE
   };
 }
 

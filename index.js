@@ -6,8 +6,10 @@ const plugin = {
   init: (args) => {
     ReactDOM.render(
       <Widget
+        protocol={args.protocol}
         socketUrl={args.socketUrl}
         socketPath={args.socketPath}
+        protocolOptions={args.protocolOptions}
         interval={args.interval}
         initPayload={args.initPayload}
         title={args.title}
@@ -19,7 +21,11 @@ const plugin = {
         connectingText={args.connectingText}
         profileAvatar={args.profileAvatar}
         showCloseButton={args.showCloseButton}
+        showFullScreenButton={args.showFullScreenButton}
         hideWhenNotConnected={args.hideWhenNotConnected}
+        autoClearCache={args.autoClearCache}
+        connectOn={args.connectOn}
+        onSocketEvent={args.onSocketEvent}
         fullScreenMode={args.fullScreenMode}
         badge={args.badge}
         params={args.params}
@@ -28,6 +34,7 @@ const plugin = {
         closeImage={args.closeImage}
         docViewer={args.docViewer}
         persistentMenu={args.persistentMenu}
+        displayUnreadCount={args.displayUnreadCount}
       />, document.querySelector(args.selector)
     );
   }

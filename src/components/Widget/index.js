@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
+  toggleFullScreen,
   toggleChat,
   openChat,
   showChat,
@@ -13,10 +14,12 @@ import {
   addVideoSnippet,
   addImageSnippet,
   addQuickReply,
+  renderCustomComponent,
   initialize,
   connectServer,
   disconnectServer,
-  pullSession
+  pullSession,
+  newUnreadMessage
 } from 'actions';
 
 import { isSnippet, isVideo, isImage, isQR, isText } from './msgProcessor';
@@ -31,19 +34,73 @@ class Widget extends Component {
     this.messages = [];
     setInterval(() => {
       if (this.messages.length > 0) {
-        const message = this.messages.shift()
+        const message = this.messages.shift();
         this.dispatchMessage(message);
         // Callback for handling message
         this.props.handleNewBotMessage(message);
+        if (!this.props.isChatOpen) {
+          this.props.dispatch(newUnreadMessage());
+        }
       }
     }, this.props.interval);
   }
 
   componentDidMount() {
-    const { socket, storage } = this.props;
+    if (this.props.connectOn === 'mount') {
+      this.initializeWidget();
+      return;
+    }
+    const { storage } = this.props;
+    const localSession = getLocalSession(storage, SESSION_NAME);
+    const lastUpdate = localSession ? localSession.lastUpdate : 0;
+    if (this.props.autoClearCache) {
+      if ((Date.now() - lastUpdate) < (30 * 60 * 1000)) {
+        this.initializeWidget();
+      } else {
+        localStorage.removeItem(SESSION_NAME);
+      }
+    } else {
+      this.props.dispatch(pullSession());
+      if (lastUpdate) this.initializeWidget();
+    }
+  }
+
+  componentDidUpdate() {
+    this.props.dispatch(pullSession());
+    if (this.props.connectOn === 'mount') {
+      this.trySendInitPayload();
+    } else if (this.props.isChatOpen) {
+      if (!this.props.initialized) {
+        this.initializeWidget();
+      }
+      this.trySendInitPayload();
+    }
+    if (this.props.embedded && this.props.initialized) {
+      this.props.dispatch(showChat());
+      this.props.dispatch(openChat());
+    }
+  }
+
+  componentWillUnmount() {
+    socket.close();
+  }
+
+  getSessionId() {
+    const { storage } = this.props;
+    // Get the local session, check if there is an existing session_id
+    const localSession = getLocalSession(storage, SESSION_NAME);
+    const local_id = localSession ? localSession.session_id : null;
+    return local_id;
+  }
+
+  initializeWidget() {
+    const { storage, socket } = this.props;
+
+    socket.createSocket();
 
     socket.on('bot_uttered', (botUttered) => {
-      this.messages.push(botUttered);
+      const newMessage = { ...botUttered, text: String(botUttered.text) };
+      this.messages.push(newMessage);
     });
 
     this.props.dispatch(pullSession());
@@ -51,12 +108,12 @@ class Widget extends Component {
     // Request a session from server
     const local_id = this.getSessionId();
     socket.on('connect', () => {
-      socket.emit('session_request', ({ 'session_id': local_id }));
+      socket.emit('session_request', ({ session_id: local_id }));
     });
 
     // When session_confirm is received from the server:
     socket.on('session_confirm', (remote_id) => {
-      console.log(`session_confirm:${socket.id} session_id:${remote_id}`);
+      console.log(`session_confirm:${socket.socket.id} session_id:${remote_id}`);
 
       // Store the initial state to both the redux store and the storage, set connected to true
       this.props.dispatch(connectServer());
@@ -67,13 +124,12 @@ class Widget extends Component {
       start a new session.
       */
       if (local_id !== remote_id) {
-
         // storage.clear();
         // Store the received session_id to storage
 
         storeLocalSession(storage, SESSION_NAME, remote_id);
         this.props.dispatch(pullSession());
-        this.trySendInitPayload()
+        this.trySendInitPayload();
       } else {
         // If this is an existing session, it's possible we changed pages and want to send a
         // user message when we land.
@@ -104,28 +160,6 @@ class Widget extends Component {
     }
   }
 
-  componentDidUpdate() {
-    this.props.dispatch(pullSession());
-    this.trySendInitPayload();
-    if (this.props.embedded && this.props.initialized) {
-      this.props.dispatch(showChat());
-      this.props.dispatch(openChat());
-    }
-  }
-
-  componentWillUnmount() {
-    const { socket } = this.props;
-    socket.close();
-  }
-
-  getSessionId() {
-    const { storage } = this.props;
-    // Get the local session, check if there is an existing session_id
-    const localSession = getLocalSession(storage, SESSION_NAME);
-    const local_id = localSession? localSession.session_id: null;
-    return local_id;
-  }
-
   // TODO: Need to erase redux store on load if localStorage
   // is erased. Then behavior on reload can be consistent with
   // behavior on first load
@@ -149,11 +183,10 @@ class Widget extends Component {
       const session_id = this.getSessionId();
 
       // check that session_id is confirmed
-      if (!session_id) return
-      console.log("sending init payload", session_id)
-      socket.emit('user_uttered', { message: initPayload, customData, session_id: session_id });
+      if (!session_id) return;
+      console.log('sending init payload', session_id);
+      socket.emit('user_uttered', { message: initPayload, customData, session_id });
       this.props.handleNewUserMessage(initPayload);
-
       this.props.dispatch(initialize());
     }
   }
@@ -162,10 +195,15 @@ class Widget extends Component {
     this.props.dispatch(toggleChat());
   };
 
+  toggleFullScreen = () => {
+    this.props.dispatch(toggleFullScreen());
+  };
+
   dispatchMessage(message) {
     if (Object.keys(message).length === 0) {
       return;
     }
+
     if (isText(message)) {
       this.props.dispatch(addResponseMessage(message.text));
     } else if (isQR(message)) {
@@ -186,6 +224,12 @@ class Widget extends Component {
         title: element.title,
         image: element.src
       }));
+    } else {
+      // some custom message
+      const props = message;
+      if (this.props.customComponent) {
+        this.props.dispatch(renderCustomComponent(this.props.customComponent, props, true));
+      }
     }
   }
 
@@ -204,12 +248,14 @@ class Widget extends Component {
     return (
       <WidgetLayout
         toggleChat={this.toggleConversation}
+        toggleFullScreen={this.toggleFullScreen}
         onSendMessage={this.handleMessageSubmit}
         title={this.props.title}
         subtitle={this.props.subtitle}
         customData={this.props.customData}
         profileAvatar={this.props.profileAvatar}
         showCloseButton={this.props.showCloseButton}
+        showFullScreenButton={this.props.showFullScreenButton}
         hideWhenNotConnected={this.props.hideWhenNotConnected}
         fullScreenMode={this.props.fullScreenMode}
         isChatOpen={this.props.isChatOpen}
@@ -220,6 +266,8 @@ class Widget extends Component {
         openLauncherImage={this.props.openLauncherImage}
         closeImage={this.props.closeImage}
         persistentMenu={this.props.persistentMenu}
+        customComponent={this.props.customComponent}
+        displayUnreadCount={this.props.displayUnreadCount}
       />
     );
   }
@@ -229,20 +277,24 @@ const mapStateToProps = state => ({
   initialized: state.behavior.get('initialized'),
   connected: state.behavior.get('connected'),
   isChatOpen: state.behavior.get('isChatOpen'),
-  isChatVisible: state.behavior.get('isChatVisible')
+  isChatVisible: state.behavior.get('isChatVisible'),
+  fullScreenMode: state.behavior.get('fullScreenMode')
 });
 
 Widget.propTypes = {
   interval: PropTypes.number,
-  title: PropTypes.string,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   customData: PropTypes.shape({}),
-  subtitle: PropTypes.string,
+  subtitle: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   initPayload: PropTypes.string,
   profileAvatar: PropTypes.string,
   showCloseButton: PropTypes.bool,
+  showFullScreenButton: PropTypes.bool,
   hideWhenNotConnected: PropTypes.bool,
   handleNewUserMessage: PropTypes.func,
   handleNewBotMessage: PropTypes.func,
+  connectOn: PropTypes.oneOf(['mount', 'open']),
+  autoClearCache: PropTypes.bool,
   fullScreenMode: PropTypes.bool,
   isChatVisible: PropTypes.bool,
   isChatOpen: PropTypes.bool,
@@ -254,13 +306,18 @@ Widget.propTypes = {
   initialized: PropTypes.bool,
   openLauncherImage: PropTypes.string,
   closeImage: PropTypes.string,
-  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
-
+  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
+  customComponent: PropTypes.func,
+  displayUnreadCount: PropTypes.bool
 };
 
 Widget.defaultProps = {
   isChatOpen: false,
   isChatVisible: true,
+  fullScreenMode: false,
+  connectOn: 'mount',
+  autoClearCache: false,
+  displayUnreadCount: false
 };
 
 export default connect(mapStateToProps)(Widget);

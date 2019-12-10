@@ -2,6 +2,76 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.6.4](https://https///compare/v0.6.3...v0.6.4) (2019-10-18)
+
+
+### Features
+
+* added props connectOn and onSocketEvent ([667c745](https://https///commit/667c745))
+
+### [0.6.3](https://https///compare/v0.6.2...v0.6.3) (2019-10-11)
+
+
+### Bug Fixes
+
+* displayUnreadCount in index ([9d915ad](https://https///commit/9d915ad))
+* displayUnreadCount props ([21ef8c2](https://https///commit/21ef8c2))
+* revert inputTextFieldHint ([cb94a5e](https://https///commit/cb94a5e))
+
+
+### Features
+
+* add unread count pastille on openLauncherMessage ([ee37f19](https://https///commit/ee37f19)), closes [#73](https://https///issues/73)
+* regroup messages in conversation by "sender" ([e837844](https://https///commit/e837844))
+
+### [0.6.2](https://https///compare/v0.6.1...v0.6.2) (2019-10-11)
+
+### [0.6.1](https://https///compare/v0.6.0...v0.6.1) (2019-10-11)
+
+
+### Bug Fixes
+
+* cast messages text into string to prevent crashes ([4778ad8](https://https///commit/4778ad8))
+
+
+### Features
+
+* experimental sockjs support ([b1f7c9d](https://https///commit/b1f7c9d))
+
+## [0.6.0](https://https///compare/v0.5.9...v0.6.0) (2019-10-03)
+
+### 0.5.10 (2019-10-02)
+
+
+### Bug Fixes
+
+* links should open in a new tab ([e238af3](https://https///commit/e238af3))
+* update node-sass version to support node12 ([dd3eee9](https://https///commit/dd3eee9))
+
+
+### Features
+
+* add commitlint and husky ([a040aeb](https://https///commit/a040aeb))
+* add standard version ([573b856](https://https///commit/573b856))
+* add test for quick replies linking ([f95e8f3](https://https///commit/f95e8f3))
+* support web url in quick replies ([ac4b6f1](https://https///commit/ac4b6f1))
+
+### [0.5.10](https://https///compare/v0.5.9...v0.5.10) (2019-10-02)
+
+
+### Bug Fixes
+
+* links should open in a new tab ([e238af3](https://https///commit/e238af3))
+* update node-sass version to support node12 ([dd3eee9](https://https///commit/dd3eee9))
+
+
+### Features
+
+* add commitlint and husky ([a040aeb](https://https///commit/a040aeb))
+* add standard version ([573b856](https://https///commit/573b856))
+* add test for quick replies linking ([f95e8f3](https://https///commit/f95e8f3))
+* support web url in quick replies ([ac4b6f1](https://https///commit/ac4b6f1))
+
 ### [0.5.9](https://https///compare/v2.1.1...v0.5.9) (2019-06-06)
 
 

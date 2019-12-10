@@ -32,14 +32,17 @@ const WidgetLayout = (props) => {
           profileAvatar={props.profileAvatar}
           toggleChat={props.toggleChat}
           isChatOpen={props.isChatOpen}
+          toggleFullScreen={props.toggleFullScreen}
+          fullScreenMode={props.fullScreenMode}
           disabledInput={props.disabledInput}
           params={props.params}
+          showFullScreenButton={props.showFullScreenButton}
           {...{ showCloseButton }}
           connected={props.connected}
           connectingText={props.connectingText}
           closeImage={props.closeImage}
           persistentMenu={props.persistentMenu}
-
+          customComponent={props.customComponent}
         />
       }
       {
@@ -51,6 +54,7 @@ const WidgetLayout = (props) => {
           fullScreenMode={props.fullScreenMode}
           openLauncherImage={props.openLauncherImage}
           closeImage={props.closeImage}
+          displayUnreadCount={props.displayUnreadCount}
         />
       }
     </div>
@@ -64,17 +68,19 @@ const mapStateToProps = state => ({
   disabledInput: state.behavior.get('disabledInput'),
   connected: state.behavior.get('connected'),
   connectingText: state.behavior.get('connectingText')
-})
+});
 
 WidgetLayout.propTypes = {
-  title: PropTypes.string,
-  subtitle: PropTypes.string,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
+  subtitle: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   onSendMessage: PropTypes.func,
   toggleChat: PropTypes.func,
+  toggleFullScreen: PropTypes.func,
   isChatOpen: PropTypes.bool,
   isChatVisible: PropTypes.bool,
   profileAvatar: PropTypes.string,
   showCloseButton: PropTypes.bool,
+  showFullScreenButton: PropTypes.bool,
   hideWhenNotConnected: PropTypes.bool,
   disabledInput: PropTypes.bool,
   fullScreenMode: PropTypes.bool,
@@ -85,8 +91,9 @@ WidgetLayout.propTypes = {
   connectingText: PropTypes.string,
   openLauncherImage: PropTypes.string,
   closeImage: PropTypes.string,
-  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string))
-
+  persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
+  customComponent: PropTypes.func,
+  displayUnreadCount: PropTypes.bool
 };
 
 export default connect(mapStateToProps)(WidgetLayout);

@@ -41,6 +41,11 @@ class Messages extends Component {
         case MESSAGES_TYPES.QUICK_REPLY: {
           return QuickReply
         }
+        case MESSAGES_TYPES.CUSTOM_COMPONENT:
+          return connect(
+            store => ({ store }),
+            dispatch => ({ dispatch })
+          )(this.props.customComponent);
       }
       return null
     })()
@@ -51,23 +56,48 @@ class Messages extends Component {
   }
 
   render() {
+    const renderMessages = () => {
+      const groups = [];
+      let group = null;
+
+      if (this.props.messages.isEmpty()) return null;
+
+      const renderMessage = (message, index) => (
+        <div className="message" key={index}>
+          {
+            this.props.profileAvatar &&
+            message.get('showAvatar') &&
+            <img src={this.props.profileAvatar} className="avatar" alt="profile" />
+          }
+          { this.getComponentToRender(message, index, index === this.props.messages.size - 1) }
+        </div>
+      );
+
+      this.props.messages.forEach((msg, index) => {
+        if (group === null || group.from !== msg.get('sender')) {
+          if (group !== null) groups.push(group);
+
+          group = {
+            from: msg.get('sender'),
+            messages: []
+          };
+        }
+
+        group.messages.push(renderMessage(msg, index));
+      });
+
+      groups.push(group); // finally push last group of messages.
+
+      return groups.map((g, index) => (
+        <div className={`group-message from-${g.from}`} key={`group_${index}`}>
+          {g.messages}
+        </div>
+      ));
+    };
+
     return (
       <div id="messages" className="messages-container">
-        {
-          this.props.messages.map((message, index) =>
-            <div className="message" key={index}>
-              {
-                this.props.profileAvatar &&
-                message.get('showAvatar') &&
-                <img src={this.props.profileAvatar} className="avatar" alt="profile" />
-              }
-              {
-
-                this.getComponentToRender(message, index, index === this.props.messages.size - 1)
-              }
-            </div>
-          )
-        }
+        { renderMessages() }
       </div>
     );
   }
@@ -75,7 +105,8 @@ class Messages extends Component {
 
 Messages.propTypes = {
   messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map),
-  profileAvatar: PropTypes.string
+  profileAvatar: PropTypes.string,
+  customComponent: PropTypes.func
 };
 
 export default connect(store => ({
