@@ -93,6 +93,14 @@ export function emitUserMessage(text) {
   };
 }
 
+export function emitMessageIfFirst(payload, text = null) {
+  return {
+    type: actions.EMIT_MESSAGE_IF_FIRST,
+    payload,
+    text
+  };
+}
+
 export function addResponseMessage(text) {
   return {
     type: actions.ADD_NEW_RESPONSE_MESSAGE,
@@ -185,8 +193,75 @@ export function setTooltipMessage(tooltipMessage) {
   };
 }
 
-export function triggerTooltipSent() {
+
+export function triggerTooltipSent(payloadSent) {
   return {
-    type: actions.TRIGGER_TOOLTIP_SENT
+    type: actions.TRIGGER_TOOLTIP_SENT,
+    payloadSent
   };
 }
+
+export function clearMetadata() {
+  return {
+    type: actions.CLEAR_METADATA
+  };
+}
+
+export function setLinkTarget(target) {
+  return {
+    type: actions.SET_LINK_TARGET,
+    target
+  };
+}
+
+export function setUserInput(userInputState) {
+  return {
+    type: actions.SET_USER_INPUT,
+    userInputState
+  };
+}
+
+export function setPageChangeCallbacks(pageChangeCallbacks) {
+  return {
+    type: actions.SET_PAGECHANGE_CALLBACKS,
+    pageChangeCallbacks
+  };
+}
+
+
+export function setDomHighlight(domHighlight) {
+  return {
+    type: actions.SET_DOM_HIGHLIGHT,
+    domHighlight
+  };
+}
+
+export function hintText(hint) {
+  return {
+    type: actions.SET_HINT_TEXT,
+    hint
+  };
+}
+
+
+export function changeOldUrl(url) {
+  return {
+    type: actions.SET_OLD_URL,
+    url
+  };
+}
+
+export function evalUrl(url) {
+  return {
+    type: actions.EVAL_URL,
+    url
+  };
+}
+
+export function setCustomCss(customCss) {
+  return {
+    type: actions.SET_CUSTOM_CSS,
+    customCss
+  };
+}
+

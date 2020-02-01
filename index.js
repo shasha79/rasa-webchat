@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Widget, addUserMessage, emitUserMessage, toggleChat, openChat, closeChat, showChat, hideChat, isOpen, isVisible, dropMessages } from './index_for_react_app';
-
+import { Widget, toggleChat, openChat, closeChat, showChat, hideChat, isOpen, isVisible, send } from './index_for_react_app';
+import { addUserMessage, emitUserMessage, dropMessages} from './index_for_react_app';
 const plugin = {
   init: (args) => {
     ReactDOM.render(
@@ -38,6 +38,8 @@ const plugin = {
         customMessageDelay={args.customMessageDelay}
         tooltipPayload={args.tooltipPayload}
         tooltipDelay={args.tooltipDelay}
+        onWidgetEvent={args.onWidgetEvent}
+        disableTooltips={args.disableTooltips}
       />, document.querySelector(args.selector)
     );
   }
@@ -55,6 +57,7 @@ export {
   emitUserMessage as emitMessage,
   dropMessages as reset,
   isOpen,
-  isVisible
+  isVisible,
+  send
 };
 

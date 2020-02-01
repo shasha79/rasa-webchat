@@ -44,9 +44,9 @@ class QuickReply extends PureComponent {
       message,
       getChosenReply,
       isLast,
-      id
+      id,
+      linkTarget
     } = this.props;
-
     const chosenReply = getChosenReply(id);
     if (chosenReply) {
       return <Message message={message} />;
@@ -55,14 +55,14 @@ class QuickReply extends PureComponent {
       <div className="quickReplies-container">
         <Message message={message} />
         {isLast && (
-        <div className="replies">
+          <div className="replies">
             {message.get('quick_replies').map((reply, index) => {
               if (reply.type === 'web_url') {
                 return (
                   <a
                     key={index}
-                    href={reply.payload}
-                    target="_blank"
+                    href={reply.url}
+                    target={linkTarget}
                     rel="noopener noreferrer"
                     className={'reply'}
                   >
@@ -91,7 +91,8 @@ class QuickReply extends PureComponent {
 
 const mapStateToProps = state => ({
   getChosenReply: id => state.messages.get(id).get('chosenReply'),
-  inputState: state.behavior.get('disabledInput')
+  inputState: state.behavior.get('disabledInput'),
+  linkTarget: state.metadata.get('linkTarget')
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -108,9 +109,10 @@ const mapDispatchToProps = dispatch => ({
 QuickReply.propTypes = {
   getChosenReply: PropTypes.func,
   chooseReply: PropTypes.func,
-  id: PropTypes.string,
+  id: PropTypes.number,
   isLast: PropTypes.bool,
-  message: PROP_TYPES.QUICK_REPLY
+  message: PROP_TYPES.QUICK_REPLY,
+  linkTarget: PropTypes.string
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(QuickReply);

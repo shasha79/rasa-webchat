@@ -83,17 +83,21 @@ export function getLocalSession(storage, key) {
     const parsedSession = JSON.parse(cachedSession);
     // Format conversation from array of object to immutable Map for use by messages components
     const formattedConversation = parsedSession.conversation
-      ? Object.values(parsedSession.conversation).map(item => Map(item))
+      ? parsedSession.conversation
       : [];
     // Check if params is undefined
     const formattedParams = parsedSession.params
       ? parsedSession.params
       : {};
+    const formattedMetadata = parsedSession.metadata
+      ? parsedSession.metadata
+      : {};
     // Create a new session to return
     session = {
       ...parsedSession,
       conversation: formattedConversation,
-      params: formattedParams
+      params: formattedParams,
+      metadata: formattedMetadata
     };
   }
   // Returns a formatted session object if any found, otherwise return undefined
@@ -105,7 +109,7 @@ export function storeLocalSession(storage, key, sid) {
   const cachedSession = storage.getItem(key);
   let session;
   if (cachedSession) {
-      // Found exisiting session in storage
+    // Found exisiting session in storage
     const parsedSession = JSON.parse(cachedSession);
     session = {
       ...parsedSession,
@@ -127,7 +131,7 @@ export const storeMessageTo = storage => (conversation) => {
   const newSession = {
     // Since immutable List is not a native JS object, store conversation as array
     ...localSession,
-    conversation: [...Array.from(conversation)],
+    conversation: conversation.toJS(),
     lastUpdate: Date.now()
   };
   storage.setItem(SESSION_NAME, JSON.stringify(newSession));
@@ -145,4 +149,18 @@ export const storeParamsTo = storage => (params) => {
   };
   storage.setItem(SESSION_NAME, JSON.stringify(newSession));
   return params;
+};
+
+
+export const storeMetadataTo = storage => (metadata) => {
+  // Store a params List to storage
+  const localSession = getLocalSession(storage, SESSION_NAME);
+  const newSession = {
+    // Since immutable Map is not a native JS object, store conversation as array
+    ...localSession,
+    metadata: metadata.toJS(),
+    lastUpdate: Date.now()
+  };
+  storage.setItem(SESSION_NAME, JSON.stringify(newSession));
+  return metadata;
 };

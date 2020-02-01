@@ -21,14 +21,18 @@ describe('<QuickReply />', () => {
         type: 'web_url',
         content_type: 'text',
         title: 'google',
-        payload: 'http://www.google.ca'
+        url: 'http://www.google.ca'
       }
     ]
   });
 
   quickReply.set('docViewer', false);
   const mockStore = configureMockStore();
-  const store = mockStore({ getChosenReply: () => undefined, inputState: false, messages: new Map([[1, new Map([['chosenReply', undefined]])]]), behavior: new Map([['disabledInput', false]]) });
+  const store = mockStore({ getChosenReply: () => undefined,
+    inputState: false,
+    messages: new Map([[1, new Map([['chosenReply', undefined]])]]),
+    behavior: new Map([['disabledInput', false]]),
+    metadata: new Map() });
 
   const quickReplyComponent = render(
     <Provider store={store}>

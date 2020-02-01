@@ -1,4 +1,4 @@
-import { store } from '../store';
+import { store } from '../../index';
 import * as actions from './index';
 
 export function isOpen() {
@@ -103,4 +103,14 @@ export function pullSession() {
 
 export function newUnreadMessage() {
   store.dispatch(actions.newUnreadMessage());
+}
+
+export function send(playload, text = '', customStore) {
+  if (customStore) {
+    customStore.dispatch(actions.emitUserMessage(playload));
+    if (text !== '') customStore.dispatch(actions.addUserMessage(text));
+    return;
+  }
+  store.dispatch(actions.emitUserMessage(playload));
+  if (text !== '') store.dispatch(actions.addUserMessage(text));
 }

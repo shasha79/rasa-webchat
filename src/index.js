@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
 
 import Widget from './components/Widget';
-import { store, initStore } from '../src/store/store';
+import { initStore } from '../src/store/store';
 import socket from './socket';
 
-const ConnectedWidget = (props) => {
+// eslint-disable-next-line import/no-mutable-exports
+export let store = null;
+
+const ConnectedWidget = forwardRef((props, ref) => {
   class Socket {
     constructor(
       url,
@@ -80,18 +83,21 @@ const ConnectedWidget = (props) => {
 
   const storage =
     props.params.storage === 'session' ? sessionStorage : localStorage;
-  initStore(
-    props.inputTextFieldHint,
-    props.connectingText,
-    sock,
-    storage,
-    props.docViewer,
-    props.connectOn,
-    props.handleNewUserMessage
-  );
+  if (!store) {
+    store = initStore(
+      props.inputTextFieldHint,
+      props.connectingText,
+      sock,
+      storage,
+      props.docViewer,
+      props.handleNewUserMessage,
+      props.onWidgetEvent
+    );
+  }
   return (
     <Provider store={store}>
       <Widget
+        ref={ref}
         initPayload={props.initPayload}
         title={props.title}
         subtitle={props.subtitle}
@@ -119,10 +125,13 @@ const ConnectedWidget = (props) => {
         customMessageDelay={props.customMessageDelay}
         tooltipPayload={props.tooltipPayload}
         tooltipDelay={props.tooltipDelay}
+        disableTooltips={props.disableTooltips}
+        defaultHighlightCss={props.defaultHighlightCss}
+        defaultHighlightAnimation={props.defaultHighlightAnimation}
       />
     </Provider>
   );
-};
+});
 
 ConnectedWidget.propTypes = {
   initPayload: PropTypes.string,
@@ -158,7 +167,16 @@ ConnectedWidget.propTypes = {
   showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   customMessageDelay: PropTypes.func,
   tooltipPayload: PropTypes.string,
-  tooltipDelay: PropTypes.number
+  tooltipDelay: PropTypes.number,
+  onWidgetEvent: PropTypes.shape({
+    onChatOpen: PropTypes.func,
+    onChatClose: PropTypes.func,
+    onChatVisible: PropTypes.func,
+    onChatHidden: PropTypes.func
+  }),
+  disableTooltips: PropTypes.bool,
+  defaultHighlightCss: PropTypes.string,
+  defaultHighlightAnimation: PropTypes.string
 };
 
 ConnectedWidget.defaultProps = {
@@ -187,12 +205,19 @@ ConnectedWidget.defaultProps = {
   showMessageDate: false,
   customMessageDelay: (message) => {
     let delay = message.length * 30;
-    if (delay > 2 * 1000) delay = 3 * 1000;
-    if (delay < 400) delay = 1000;
+    if (delay > 3 * 1000) delay = 3 * 1000;
+    if (delay < 800) delay = 800;
     return delay;
   },
   tooltipPayload: null,
-  tooltipDelay: 500
+  tooltipDelay: 500,
+  onWidgetEvent: {
+    onChatOpen: () => {},
+    onChatClose: () => {},
+    onChatVisible: () => {},
+    onChatHidden: () => {}
+  },
+  disableTooltips: false
 };
 
 export default ConnectedWidget;

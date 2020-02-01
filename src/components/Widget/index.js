@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -6,6 +5,7 @@ import {
   toggleFullScreen,
   toggleChat,
   openChat,
+  closeChat,
   showChat,
   addUserMessage,
   emitUserMessage,
@@ -19,145 +19,370 @@ import {
   connectServer,
   disconnectServer,
   pullSession,
-  newUnreadMessage
+  newUnreadMessage,
+  triggerMessageDelayed,
+  triggerTooltipSent,
+  setTooltipMessage,
+  emitMessageIfFirst,
+  clearMetadata,
+  setUserInput,
+  setLinkTarget,
+  setPageChangeCallbacks,
+  changeOldUrl,
+  setDomHighlight,
+  evalUrl,
+  setCustomCss
 } from 'actions';
 
+import { SESSION_NAME, NEXT_MESSAGE } from 'constants';
 import { isSnippet, isVideo, isImage, isQR, isText } from './msgProcessor';
 import WidgetLayout from './layout';
 import { storeLocalSession, getLocalSession } from '../../store/reducers/helper';
-import { SESSION_NAME, NEXT_MESSAGE } from 'constants';
 
 class Widget extends Component {
-
   constructor(props) {
     super(props);
     this.messages = [];
     this.onGoingMessageDelay = false;
-    setInterval(() => {
-      if (this.messages.length > 0) {
-        const message = this.messages.shift();
-        this.dispatchMessage(message);
-        // Callback for handling message
-        this.props.handleNewBotMessage(message);
-        if (!this.props.isChatOpen) {
-          this.props.dispatch(newUnreadMessage());
-        }
-      }
-    }, this.props.interval);
+    this.sendMessage = this.sendMessage.bind(this);
+    this.intervalId = null;
+    this.eventListenerCleaner = () => {};
   }
 
+
   componentDidMount() {
-    if (this.props.connectOn === 'mount') {
+    const { connectOn, autoClearCache, storage, dispatch, defaultHighlightAnimation } = this.props;
+
+    this.intervalId = setInterval(() => dispatch(evalUrl(window.location.href)), 500);
+    if (connectOn === 'mount') {
       this.initializeWidget();
       return;
     }
-    const { storage } = this.props;
+
+
+    // add the default highlight css to the document
+    const styleNode = document.createElement('style');
+    styleNode.innerHTML = defaultHighlightAnimation;
+    document.body.appendChild(styleNode);
+
+
     const localSession = getLocalSession(storage, SESSION_NAME);
     const lastUpdate = localSession ? localSession.lastUpdate : 0;
-    if (this.props.autoClearCache) {
-      if ((Date.now() - lastUpdate) < (30 * 60 * 1000)) {
+
+    if (autoClearCache) {
+      if (Date.now() - lastUpdate < 30 * 60 * 1000) {
         this.initializeWidget();
       } else {
         localStorage.removeItem(SESSION_NAME);
       }
     } else {
-      this.props.dispatch(pullSession());
+      dispatch(pullSession());
       if (lastUpdate) this.initializeWidget();
     }
   }
 
   componentDidUpdate() {
-    this.props.dispatch(pullSession());
-    if (this.props.connectOn === 'mount') {
-      this.trySendInitPayload();
-    } else if (this.props.isChatOpen) {
-      if (!this.props.initialized) {
+    const { isChatOpen, dispatch, embedded, initialized } = this.props;
+
+    if (isChatOpen) {
+      if (!initialized) {
         this.initializeWidget();
       }
       this.trySendInitPayload();
     }
-    if (this.props.embedded && this.props.initialized) {
-      this.props.dispatch(showChat());
-      this.props.dispatch(openChat());
+
+    if (embedded && initialized) {
+      dispatch(showChat());
+      dispatch(openChat());
     }
+    this.applyCustomStyle();
   }
 
   componentWillUnmount() {
-    socket.close();
+    const { socket } = this.props;
+
+    if (socket) {
+      socket.close();
+    }
+    clearTimeout(this.tooltipTimeout);
+    clearInterval(this.intervalId);
   }
 
   getSessionId() {
     const { storage } = this.props;
     // Get the local session, check if there is an existing session_id
     const localSession = getLocalSession(storage, SESSION_NAME);
-    const local_id = localSession ? localSession.session_id : null;
-    return local_id;
+    const localId = localSession ? localSession.session_id : null;
+    return localId;
   }
 
-  initializeWidget() {
-    const { storage, socket } = this.props;
+  sendMessage(payload, text = '', when = 'always') {
+    const { dispatch, initialized } = this.props;
+    if (!initialized) {
+      this.initializeWidget(false);
+      dispatch(initialize());
+    }
+    if (when === 'always') {
+      dispatch(emitUserMessage(payload));
+      if (text !== '') dispatch(addUserMessage(text));
+    } else if (when === 'init') {
+      dispatch(emitMessageIfFirst(payload, text));
+    }
+  }
 
-    socket.createSocket();
+  handleMessageReceived(message) {
+    const { dispatch } = this.props;
+    if (!this.onGoingMessageDelay) {
+      this.onGoingMessageDelay = true;
+      dispatch(triggerMessageDelayed(true));
+      this.props.handleNewBotMessage(message);
+      this.newMessageTimeout(message);
+    } else {
+      this.messages.push(message);
+    }
+  }
 
-    socket.on('bot_uttered', (botUttered) => {
-      const newMessage = { ...botUttered, text: String(botUttered.text) };
-      this.messages.push(newMessage);
-    });
+  popLastMessage() {
+    const { dispatch } = this.props;
+    if (this.messages.length) {
+      this.onGoingMessageDelay = true;
+      dispatch(triggerMessageDelayed(true));
+      this.newMessageTimeout(this.messages.shift());
+    }
+  }
 
-    this.props.dispatch(pullSession());
+  newMessageTimeout(messageWithMetadata) {
+    const { dispatch, isChatOpen, customMessageDelay, disableTooltips } = this.props;
+    const { metadata, ...message } = messageWithMetadata;
+    setTimeout(() => {
+      this.dispatchMessage(message);
+      if (!isChatOpen) {
+        dispatch(newUnreadMessage());
+        if (!disableTooltips) dispatch(setTooltipMessage(String(message.text)));
+      }
+      dispatch(triggerMessageDelayed(false));
+      this.onGoingMessageDelay = false;
+      this.popLastMessage();
+    }, customMessageDelay(message.text || ''));
+  }
 
-    // Request a session from server
-    const local_id = this.getSessionId();
-    socket.on('connect', () => {
-      socket.emit('session_request', ({ session_id: local_id }));
-    });
+  propagateMetadata(metadata) {
+    const {
+      dispatch
+    } = this.props;
+    const { linkTarget,
+      userInput,
+      pageChangeCallbacks,
+      domHighlight,
+      forceOpen,
+      forceClose,
+      pageEventCallbacks
+    } = metadata;
+    if (linkTarget) {
+      dispatch(setLinkTarget(linkTarget));
+    }
+    if (userInput) {
+      dispatch(setUserInput(userInput));
+    }
+    if (pageChangeCallbacks) {
+      dispatch(changeOldUrl(window.location.href));
+      dispatch(setPageChangeCallbacks(pageChangeCallbacks));
+    }
+    if (domHighlight) {
+      dispatch(setDomHighlight(domHighlight));
+    }
+    if (forceOpen) {
+      dispatch(openChat());
+    }
+    if (forceClose) {
+      dispatch(closeChat());
+    }
+    if (pageEventCallbacks) {
+      this.eventListenerCleaner = this.addCustomsEventListeners(pageEventCallbacks.pageEvents);
+    }
+  }
 
-    // When session_confirm is received from the server:
-    socket.on('session_confirm', (remote_id) => {
-      console.log(`session_confirm:${socket.socket.id} session_id:${remote_id}`);
+  handleBotUtterance(botUtterance) {
+    const { dispatch } = this.props;
+    this.clearCustomStyle();
+    this.eventListenerCleaner();
+    dispatch(clearMetadata());
 
-      // Store the initial state to both the redux store and the storage, set connected to true
-      this.props.dispatch(connectServer());
+    if (botUtterance.metadata) this.propagateMetadata(botUtterance.metadata);
+    const newMessage = { ...botUtterance, text: String(botUtterance.text) };
+    if (botUtterance.metadata && botUtterance.metadata.customCss) {
+      newMessage.customCss = botUtterance.metadata.customCss;
+    }
+    this.handleMessageReceived(newMessage);
+  }
 
-      /*
-      Check if the session_id is consistent with the server
-      If the local_id is null or different from the remote_id,
-      start a new session.
-      */
-      if (local_id !== remote_id) {
-        // storage.clear();
-        // Store the received session_id to storage
+  addCustomsEventListeners(pageEventCallbacks) {
+    const eventsListeners = [];
 
-        storeLocalSession(storage, SESSION_NAME, remote_id);
-        this.props.dispatch(pullSession());
-        this.trySendInitPayload();
-      } else {
-        // If this is an existing session, it's possible we changed pages and want to send a
-        // user message when we land.
-        const nextMessage = window.localStorage.getItem(NEXT_MESSAGE);
+    pageEventCallbacks.forEach((pageEvent) => {
+      const { event, payload, selector } = pageEvent;
+      const sendPayload = () => {
+        this.sendMessage(payload);
+      };
 
-        if (nextMessage !== null) {
-          const { message, expiry } = JSON.parse(nextMessage);
-          window.localStorage.removeItem(NEXT_MESSAGE);
-
-          if (expiry === 0 || expiry > Date.now()) {
-            this.props.dispatch(addUserMessage(message));
-            this.props.dispatch(emitUserMessage(message));
-          }
+      if (event && payload && selector) {
+        const elemList = document.querySelectorAll(selector);
+        if (elemList.length > 0) {
+          elemList.forEach((elem) => {
+            eventsListeners.push({ elem, event, sendPayload });
+            elem.addEventListener(event, sendPayload);
+          });
         }
       }
     });
 
-    socket.on('disconnect', (reason) => {
-      console.log(reason);
-      if (reason !== 'io client disconnect') {
-        this.props.dispatch(disconnectServer());
-      }
-    });
+    const cleaner = () => {
+      eventsListeners.forEach((eventsListener) => {
+        eventsListener.elem.removeEventListener(eventsListener.event, eventsListener.sendPayload);
+      });
+    };
 
-    if (this.props.embedded && this.props.initialized) {
-      this.props.dispatch(showChat());
-      this.props.dispatch(openChat());
+    return cleaner;
+  }
+
+  clearCustomStyle() {
+    const { domHighlight, defaultHighlightClassname } = this.props;
+    const domHighlightJS = domHighlight.toJS() || {};
+    if (domHighlightJS.selector) {
+      const element = document.querySelector(domHighlightJS.selector);
+      switch (domHighlightJS.style) {
+        case 'custom':
+          element.setAttribute('style', '');
+          break;
+        case 'class':
+          element.classList.remove(domHighlightJS.css);
+          break;
+        default:
+          if (defaultHighlightClassname !== '') {
+            element.classList.remove(defaultHighlightClassname);
+          } else {
+            element.setAttribute('style', '');
+          }
+      }
+    }
+  }
+
+  applyCustomStyle() {
+    const { domHighlight, defaultHighlightCss, defaultHighlightClassname } = this.props;
+    const domHighlightJS = domHighlight.toJS() || {};
+    if (domHighlightJS.selector) {
+      const element = document.querySelector(domHighlightJS.selector);
+      switch (domHighlightJS.style) {
+        case 'custom':
+          element.setAttribute('style', domHighlightJS.css);
+          break;
+        case 'class':
+          element.classList.add(domHighlightJS.css);
+          break;
+        default:
+          if (defaultHighlightClassname !== '') {
+            element.classList.add(defaultHighlightClassname);
+          } else {
+            element.setAttribute('style', defaultHighlightCss);
+          }
+      }
+    }
+  }
+
+  initializeWidget(sendInitPayload = true) {
+    const {
+      storage,
+      socket,
+      dispatch,
+      embedded,
+      initialized,
+      connectOn,
+      tooltipPayload,
+      tooltipDelay
+    } = this.props;
+
+    if (!socket.isInitialized()) {
+      socket.createSocket();
+
+      socket.on('bot_uttered', (botUttered) => {
+        this.handleBotUtterance(botUttered);
+      });
+
+      dispatch(pullSession());
+
+      // Request a session from server
+      const localId = this.getSessionId();
+      socket.on('connect', () => {
+        socket.emit('session_request', { session_id: localId });
+      });
+
+      // When session_confirm is received from the server:
+      socket.on('session_confirm', (sessionObject) => {
+        let remoteId;
+        if (typeof sessionObject === 'object' && sessionObject !== null) {
+          remoteId = sessionObject.session_id;
+        } else {
+          remoteId = sessionObject;
+        }
+
+        // eslint-disable-next-line no-console
+        console.log(`session_confirm:${socket.socket.id} session_id:${remoteId}`);
+        // Store the initial state to both the redux store and the storage, set connected to true
+        dispatch(connectServer());
+        
+        /*
+        Check if the session_id is consistent with the server
+        If the localId is null or different from the remote_id,
+        start a new session.
+        */
+        if (localId !== remoteId) {
+          // storage.clear();
+          // Store the received session_id to storage
+
+          storeLocalSession(storage, SESSION_NAME, remoteId);
+          dispatch(pullSession());
+          if (sendInitPayload) {
+            this.trySendInitPayload();
+          }
+        } else {
+          // If this is an existing session, it's possible we changed pages and want to send a
+          // user message when we land.
+          const nextMessage = window.localStorage.getItem(NEXT_MESSAGE);
+
+          if (nextMessage !== null) {
+            const { message, expiry } = JSON.parse(nextMessage);
+            window.localStorage.removeItem(NEXT_MESSAGE);
+
+            if (expiry === 0 || expiry > Date.now()) {
+              dispatch(addUserMessage(message));
+              dispatch(emitUserMessage(message));
+            }
+          }
+        } if (connectOn === 'mount' && tooltipPayload) {
+          this.tooltipTimeout = setTimeout(() => {
+            this.trySendTooltipPayload();
+          }, parseInt(tooltipDelay, 10));
+        }
+      });
+
+      socket.on('disconnect', (reason) => {
+        // eslint-disable-next-line no-console
+        console.log(reason);
+        if (reason !== 'io client disconnect') {
+          dispatch(disconnectServer());
+        } else {
+          //socket.socket.connect();
+          //this.props.dispatch(connectServer());
+          //this.componentDidUpdate();
+
+          
+         }
+      });
+    }
+
+    if (embedded && initialized) {
+      dispatch(showChat());
+      dispatch(openChat());
     }
   }
 
@@ -165,7 +390,7 @@ class Widget extends Component {
   // is erased. Then behavior on reload can be consistent with
   // behavior on first load
 
-  trySendInitPayload = () => {
+  trySendInitPayload() {
     const {
       initPayload,
       customData,
@@ -174,14 +399,15 @@ class Widget extends Component {
       isChatOpen,
       isChatVisible,
       embedded,
-      connected
+      connected,
+      dispatch
     } = this.props;
 
     // Send initial payload when chat is opened or widget is shown
-    if (!initialized && connected && (((isChatOpen && isChatVisible) || embedded))) {
+    if (!initialized && connected && ((isChatOpen && isChatVisible) || embedded)) {
       // Only send initial payload if the widget is connected to the server but not yet initialized
 
-      const session_id = this.getSessionId();
+      const sessionId = this.getSessionId();
 
       // check that session_id is confirmed
       if (!sessionId) return;
@@ -194,50 +420,84 @@ class Widget extends Component {
     }
   }
 
-  toggleConversation = () => {
-    this.props.dispatch(toggleChat());
-  };
+  trySendTooltipPayload() {
+    const {
+      tooltipPayload,
+      socket,
+      customData,
+      connected,
+      isChatOpen,
+      dispatch,
+      tooltipSent
+    } = this.props;
 
-  toggleFullScreen = () => {
+    if (connected && !isChatOpen && !tooltipSent.get(tooltipPayload)) {
+      const sessionId = this.getSessionId();
+
+      if (!sessionId) return;
+
+      socket.emit('user_uttered', { message: tooltipPayload, customData, session_id: sessionId });
+
+      dispatch(triggerTooltipSent(tooltipPayload));
+      dispatch(initialize());
+    }
+  }
+
+  toggleConversation() {
+    this.props.dispatch(setTooltipMessage(null));
+    clearTimeout(this.tooltipTimeout);
+    this.props.dispatch(toggleChat());
+  }
+
+  toggleFullScreen() {
     this.props.dispatch(toggleFullScreen());
-  };
+  }
 
   dispatchMessage(message) {
     if (Object.keys(message).length === 0) {
       return;
     }
+    const { customCss, ...messageClean } = message;
 
-    if (isText(message)) {
-      this.props.dispatch(addResponseMessage(message.text));
-    } else if (isQR(message)) {
-      this.props.dispatch(addQuickReply(message));
-    } else if (isSnippet(message)) {
-
-      this.props.dispatch(addLinkSnippet({
-        elements: message.attachment.payload.elements
-      }));
-    } else if (isVideo(message)) {
-      const element = message.attachment.payload;
-      this.props.dispatch(addVideoSnippet({
-        title: element.title,
-        video: element.src
-      }));
-    } else if (isImage(message)) {
-      const element = message.attachment.payload;
-      this.props.dispatch(addImageSnippet({
-        title: element.title,
-        image: element.src
-      }));
+    if (isText(messageClean)) {
+      this.props.dispatch(addResponseMessage(messageClean.text));
+    } else if (isQR(messageClean)) {
+      this.props.dispatch(addQuickReply(messageClean));
+    } else if (isSnippet(messageClean)) {
+      const element = messageClean.attachment.payload.elements[0];
+      this.props.dispatch(
+        addLinkSnippet({
+          elements: message.attachment.payload.elements       })
+      );
+    } else if (isVideo(messageClean)) {
+      const element = messageClean.attachment.payload;
+      this.props.dispatch(
+        addVideoSnippet({
+          title: element.title,
+          video: element.src
+        })
+      );
+    } else if (isImage(messageClean)) {
+      const element = messageClean.attachment.payload;
+      this.props.dispatch(
+        addImageSnippet({
+          title: element.title,
+          image: element.src
+        })
+      );
     } else {
       // some custom message
-      const props = message;
+      const props = messageClean;
       if (this.props.customComponent) {
         this.props.dispatch(renderCustomComponent(this.props.customComponent, props, true));
       }
     }
+    if (customCss) {
+      this.props.dispatch(setCustomCss(message.customCss));
+    }
   }
 
-  handleMessageSubmit = (event) => {
+  handleMessageSubmit(event) {
     event.preventDefault();
     const userUttered = event.target.message.value;
     if (userUttered) {
@@ -245,14 +505,14 @@ class Widget extends Component {
       this.props.dispatch(emitUserMessage(userUttered));
     }
     event.target.message.value = '';
-  };
+  }
 
   render() {
     return (
       <WidgetLayout
-        toggleChat={this.toggleConversation}
-        toggleFullScreen={this.toggleFullScreen}
-        onSendMessage={this.handleMessageSubmit}
+        toggleChat={() => this.toggleConversation()}
+        toggleFullScreen={() => this.toggleFullScreen()}
+        onSendMessage={event => this.handleMessageSubmit(event)}
         title={this.props.title}
         subtitle={this.props.subtitle}
         customData={this.props.customData}
@@ -271,6 +531,8 @@ class Widget extends Component {
         persistentMenu={this.props.persistentMenu}
         customComponent={this.props.customComponent}
         displayUnreadCount={this.props.displayUnreadCount}
+        showMessageDate={this.props.showMessageDate}
+        tooltipPayload={this.props.tooltipPayload}
       />
     );
   }
@@ -281,11 +543,14 @@ const mapStateToProps = state => ({
   connected: state.behavior.get('connected'),
   isChatOpen: state.behavior.get('isChatOpen'),
   isChatVisible: state.behavior.get('isChatVisible'),
-  fullScreenMode: state.behavior.get('fullScreenMode')
+  fullScreenMode: state.behavior.get('fullScreenMode'),
+  tooltipSent: state.metadata.get('tooltipSent'),
+  oldUrl: state.behavior.get('oldUrl'),
+  pageChangeCallbacks: state.behavior.get('pageChangeCallbacks'),
+  domHighlight: state.metadata.get('domHighlight')
 });
 
 Widget.propTypes = {
-  interval: PropTypes.number,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   customData: PropTypes.shape({}),
   subtitle: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
@@ -304,14 +569,25 @@ Widget.propTypes = {
   badge: PropTypes.number,
   socket: PropTypes.shape({}),
   embedded: PropTypes.bool,
-  params: PropTypes.object,
+  params: PropTypes.shape({}),
   connected: PropTypes.bool,
   initialized: PropTypes.bool,
   openLauncherImage: PropTypes.string,
   closeImage: PropTypes.string,
   persistentMenu: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
   customComponent: PropTypes.func,
-  displayUnreadCount: PropTypes.bool
+  displayUnreadCount: PropTypes.bool,
+  showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  customMessageDelay: PropTypes.func.isRequired,
+  tooltipPayload: PropTypes.string,
+  tooltipSent: PropTypes.shape({}),
+  tooltipDelay: PropTypes.number.isRequired,
+  domHighlight: PropTypes.shape({}),
+  storage: PropTypes.shape({}),
+  disableTooltips: PropTypes.bool,
+  defaultHighlightAnimation: PropTypes.string,
+  defaultHighlightCss: PropTypes.string,
+  defaultHighlightClassname: PropTypes.string
 };
 
 Widget.defaultProps = {
@@ -320,7 +596,18 @@ Widget.defaultProps = {
   fullScreenMode: false,
   connectOn: 'mount',
   autoClearCache: false,
-  displayUnreadCount: false
+  displayUnreadCount: false,
+  tooltipPayload: null,
+  oldUrl: '',
+  disableTooltips: false,
+  defaultHighlightClassname: '',
+  defaultHighlightCss: 'animation: blinker 0.5s linear infinite alternate;',
+  defaultHighlightAnimation: `@keyframes default-botfront-blinker-animation {
+    to {
+      outline-style: solid;
+      outline-color: green;
+    }
+  }`
 };
 
-export default connect(mapStateToProps)(Widget);
+export default connect(mapStateToProps, null, null, { forwardRef: true })(Widget);

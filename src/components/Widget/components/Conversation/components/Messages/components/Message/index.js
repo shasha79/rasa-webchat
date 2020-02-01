@@ -9,12 +9,26 @@ import './styles.scss';
 
 class Message extends PureComponent {
   render() {
-    const { docViewer } = this.props;
+    const { docViewer, linkTarget } = this.props;
     const sender = this.props.message.get('sender');
     const text = this.props.message.get('text');
+    const customCss = this.props.message.get('customCss') && this.props.message.get('customCss').toJS();
+
+    if (customCss && customCss.style === 'class') {
+      customCss.css = customCss.css.replace(/^\./, '');
+    }
     return (
-      <div className={sender}>
-        <div className="message-text">
+      <div
+        className={sender === 'response' && customCss && customCss.style === 'class' ?
+          `response ${customCss.css}` :
+          sender}
+        style={{ cssText: sender === 'response' && customCss && customCss.style === 'custom' ?
+          customCss.css :
+          undefined }}
+      >
+        <div
+          className="message-text"
+        >
           {sender === 'response' ? (
             <ReactMarkdown
               className={'markdown'}
@@ -29,7 +43,7 @@ class Message extends PureComponent {
                   docViewer ? (
                     <DocViewer src={props.href}>{props.children}</DocViewer>
                   ) : (
-                    <a href={props.href} target="_blank" rel="noopener noreferrer">{props.children}</a>
+                    <a href={props.href} target={linkTarget || '_blank'} rel="noopener noreferrer">{props.children}</a>
                   )
               }}
             />
@@ -44,10 +58,17 @@ class Message extends PureComponent {
 
 Message.propTypes = {
   message: PROP_TYPES.MESSAGE,
-  docViewer: PropTypes.bool.isRequired
+  docViewer: PropTypes.bool,
+  linkTarget: PropTypes.string
+};
+
+Message.defaultTypes = {
+  docViewer: false,
+  linkTarget: '_blank'
 };
 
 const mapStateToProps = state => ({
+  linkTarget: state.metadata.get('linkTarget'),
   docViewer: state.behavior.get('docViewer')
 });
 

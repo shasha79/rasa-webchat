@@ -2,6 +2,73 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.16](https://https///compare/v0.7.15...v0.7.16) (2020-01-30)
+
+
+### Features
+
+* initial support for pageEventCallbacks ([caf129b](https://https///commit/caf129b3b1d07c829732dde9c9d29d5d9c8311ce))
+
+
+### Bug Fixes
+
+* webchat stuck on typing after refresh ([6d6d2f2](https://https///commit/6d6d2f2c08b571c028bda225eb8443b5b4aeb3dc))
+
+### [0.7.15](https://https///compare/v0.7.14...v0.7.15) (2020-01-29)
+
+### [0.7.14](https://https///compare/v0.7.13...v0.7.14) (2020-01-29)
+
+### [0.7.13](https://https///compare/v0.7.12...v0.7.13) (2020-01-27)
+
+### [0.7.12](https://https///compare/v0.7.11...v0.7.12) (2020-01-22)
+
+
+### Bug Fixes
+
+* reverted to opening links in new tab ([50b4b63](https://https///commit/50b4b63))
+
+### [0.7.11](https://https///compare/v0.7.10...v0.7.11) (2020-01-22)
+
+
+### Bug Fixes
+
+* wrong parameters in initStore ([75fec82](https://https///commit/75fec82))
+
+### [0.7.10](https://https///compare/v0.7.9...v0.7.10) (2020-01-17)
+
+
+### Bug Fixes
+
+* typo in onWidgetEvent ([c6d8588](https://https///commit/c6d8588))
+
+### [0.7.9](https://https///compare/v0.7.8...v0.7.9) (2020-01-15)
+
+
+### Features
+
+* add widget even callback ([904cdf1](https://https///commit/904cdf1))
+* allows the use of ref ([c8f7688](https://https///commit/c8f7688))
+* domHightlight metadata support ([6a9a8d2](https://https///commit/6a9a8d2))
+* forceOpen metadata support ([9034e62](https://https///commit/9034e62))
+* new launcher icon ([4d3675b](https://https///commit/4d3675b))
+
+### [0.7.8](https://https///compare/v0.7.4...v0.7.8) (2019-12-27)
+
+### [0.7.4](https://https///compare/v0.7.3...v0.7.4) (2019-12-19)
+
+
+### Features
+
+* add a send function ([#150](https://https//undefined/issues/150)) ([4221e84](https://https///commit/4221e84))
+
+### [0.7.3](https://https///compare/v0.7.2...v0.7.3) (2019-12-10)
+
+
+### Bug Fixes
+
+* detect text and qr messages when incoming metadata present ([8dcba98](https://https///commit/8dcba98))
+* use message.content -- limitation from stompjs ([32b1e0b](https://https///commit/32b1e0b))
+
 ### [0.7.2](https://https///compare/v0.7.1...v0.7.2) (2019-12-04)
 
 
