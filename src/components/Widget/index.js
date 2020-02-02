@@ -371,8 +371,11 @@ class Widget extends Component {
         if (reason !== 'io client disconnect') {
           dispatch(disconnectServer());
         } else {
-          //socket.socket.connect();
-          //this.props.dispatch(connectServer());
+          console.log("Reconnecting");
+          socket.socket.connect();
+          this.props.dispatch(connectServer());
+          //this.setState({connected: true});
+          //this.render();
           //this.componentDidUpdate();
 
           

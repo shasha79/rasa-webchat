@@ -19,7 +19,7 @@ const WidgetLayout = (props) => {
   if (chatShowing && !props.embedded) {
     classes.push('chat-open');
   }
-  {console.log("WidgetLayout PM: " + JSON.stringify(props.persistentMenu));}
+  {console.log("WidgetLayout isVisible: " + isVisible + " PM: " + JSON.stringify(props.persistentMenu));}
 
   return isVisible ? (
     <div className={classes.join(' ')}>

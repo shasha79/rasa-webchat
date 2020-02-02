@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
 import { CarouselProvider, Slider, Slide, Image } from 'pure-react-carousel';
+import { Map, List, fromJS } from 'immutable';
+// TODO: import 'pure-react-carousel/dist/react-carousel.es.css';
 
 import QuickReply from '../QuickReply/index';
 
@@ -9,20 +11,29 @@ import './styles.scss';
 
 class Snippet extends PureComponent {
   render() {
-    const elements = this.props.message.get('elements').elements;
+    var elements = this.props.message.get('elements');
+    // Elements are different if coming from the store (Map) or from the message (Array)
+    // If elements is not Map, convert them to make the rest of code working seamlessly
+    if (! Map.isMap(elements)) {
+        elements = Map(fromJS(elements));   
+    }
+    elements = elements.get('elements');
     console.log("Elements: " + JSON.stringify(elements));
+    if (elements == null) { return null; }
+
     const slides = elements.map((item, index) => {
+      const url = item.get("buttons") != null ? item.get("buttons").get(0).get("url") : null;  
       return (
         <Slide index={index}>
             
-            <Image className="snippet-image" src={item.image_url} hasMasterSpinner={false}>
+            <Image className="snippet-image" src={item.get("image_url")} hasMasterSpinner={false}>
 
             </Image>
-            <a href={item.buttons[0].url} target='_blank'>
-                { item.title }
+            <a href={url} target='_blank'>
+                { item.get("title") }
             </a> 
             <p><small>
-                { item.subtitle }
+                { item.get("subtitle") }
             </small></p>  
         </Slide>
       );
