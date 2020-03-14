@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { PROP_TYPES } from 'constants';
 import { addUserMessage, emitUserMessage, setQuickReply, toggleInputDisabled, changeInputFieldHint } from 'actions';
 import Message from '../Message/index';
+import { Map, List, fromJS } from 'immutable';
 
 import './styles.scss';
 
@@ -33,8 +34,8 @@ class QuickReply extends PureComponent {
       id
     } = this.props;
 
-    const payload = reply.payload;
-    const title = reply.title;
+    const payload = reply.get('payload');
+    const title = reply.get('title');
     chooseReply(payload, title, id);
     // this.props.changeInputFieldHint('Type a message...');
   }
@@ -57,16 +58,19 @@ class QuickReply extends PureComponent {
         {isLast && (
           <div className="replies">
             {message.get('quick_replies').map((reply, index) => {
-              if (reply.type === 'web_url') {
+            if (! Map.isMap(reply)) {
+               reply = Map(fromJS(reply));   
+            }
+              if (reply.get('type') === 'web_url') {
                 return (
                   <a
                     key={index}
-                    href={reply.url}
+                    href={reply.get('url')}
                     target={linkTarget}
                     rel="noopener noreferrer"
                     className={'reply'}
                   >
-                    {reply.title}
+                    {reply.get('title')}
                   </a>
                 );
               }
@@ -77,7 +81,7 @@ class QuickReply extends PureComponent {
                   className={'reply'}
                   onClick={() => this.handleClick(reply)}
                 >
-                  {reply.title}
+                  {reply.get('title')}
                 </div>
               );
             })}
