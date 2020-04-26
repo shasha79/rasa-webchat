@@ -11,14 +11,15 @@
   border: 0;
   border-radius: 50%;
   box-shadow: 0px 2px 10px 1px $grey-3;
-  height: 60px;
+  height: 48px;
   margin-top: 10px;
-  width: 60px;
+  width: 48px;
+  padding: 0 !important;
 
   &:focus {
     outline: none;
   }
-  
+
   &.hide {
     display: none
   }
@@ -26,7 +27,7 @@
   &.full-screen {
     @include launcher-fs;
   }
-  
+
   img {
     width: 70%;
     max-height: 70%;
@@ -77,6 +78,12 @@
     width: 10px;
     transition: all 0.2s ease-in-out;
   }
+  button {
+    &:hover {
+      background-color: $blue-2;
+    }
+  }
+
 }
 
 @keyframes slideUp {

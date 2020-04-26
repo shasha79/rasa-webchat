@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
 
-$roboto: 'Roboto', serif;  
+$roboto: 'Open Sans', sans-serif;
 
-@mixin message-bubble($color, $textColor, $borderRadius: 15px) {
+@mixin message-bubble($color, $textColor, $borderRadius: 5px) {
   background-color: $color;
   color: $textColor;
   border-radius: $borderRadius;
@@ -14,7 +14,7 @@ $roboto: 'Roboto', serif;
 
 @mixin borderless-message-bubble($color, $textColor) {
     border-color: $color;
-    border-radius: 15px;
+    border-radius: 5px;
     color: $textColor;
     border-style: solid;
     padding: 15px;
