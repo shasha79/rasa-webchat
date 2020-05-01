@@ -3,7 +3,7 @@
 .conversation-container {
   .persistent-menu-container {
     align-items: center;
-    display: flex;
+    display: none;
     background-color: $grey-2;
     height: 45px;
     padding: 5px;
@@ -20,7 +20,7 @@
     padding-inline-start: 10px;
     padding-inline-end: 20px;
   }
-  
+
 
   @media screen and (max-width: 800px)  {
     .persistent-menu-container {
@@ -28,7 +28,7 @@
       flex-shrink: 0;
     }
   }
-  
+
 }
 
 .widget-embedded {

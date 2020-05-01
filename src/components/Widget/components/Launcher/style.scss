@@ -10,7 +10,7 @@
   background-color: $blue-1;
   border: 0;
   border-radius: 50%;
-  box-shadow: 0px 2px 10px 1px $grey-3;
+  box-shadow: 0 2px 20px 0px rgba(0, 0, 0, 0.4);
   height: 48px;
   margin-top: 10px;
   width: 48px;
@@ -45,6 +45,7 @@
     right: 0;
     font-weight: 700;
   }
+
   .tooltip-body {
     background-color: white;
     border-radius: 8px;
@@ -59,6 +60,7 @@
     line-height: 1.4em;
     animation: slideUp 0.3s ease-in-out;
     transition: all 0.2s ease-in-out;
+
     &:hover {
       background-color: rgb(250, 250, 250);
       transform: translateY(-2px);
@@ -78,12 +80,14 @@
     width: 10px;
     transition: all 0.2s ease-in-out;
   }
-  button {
-    &:hover {
-      background-color: $blue-2;
-    }
+
+  &:hover {
+    background-color: $blue-2;
   }
 
+  &:focus {
+    background-color: $blue-2;
+  }
 }
 
 @keyframes slideUp {
@@ -93,6 +97,8 @@
 
 .open-launcher {
   @include animation(0, 0.5s, rotation-rl);
+  margin-left: 15%;
+  margin-bottom: 5%;
 }
 
 .close-launcher {
